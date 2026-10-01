@@ -1,11 +1,6 @@
 <!doctype html>
 <html lang="el">
 <head>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1d4ed8">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Ασφαλιστικός Πράκτορας">
-
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ασφαλιστικός Πράκτορας - Simulator</title>
@@ -37,31 +32,55 @@ function show(){
  const q=quiz[index];
  let h=`<h2>Ερώτηση ${index+1}/60</h2><p>${q.q}</p>`;
  q.options.forEach(o=>{
- h+=`<button class="option" onclick="answer('${o.letter}')">${o.letter}. ${o.text}</button>`;
+   h+=`<button class="option" onclick="answer('${o.letter}', this)">${o.letter}. ${o.text}</button>`;
  });
  document.getElementById('app').innerHTML=h;
 }
-function answer(a){
+function answer(a, btn){
  const q=quiz[index];
- if(a===q.answer) score++;
- else mistakes.push(q);
- index++;
- if(index<quiz.length) show(); else finish();
+ const buttons=[...document.querySelectorAll('.option')];
+ buttons.forEach(b=>b.disabled=true);
+
+ if(a===q.answer){
+   score++;
+   btn.style.background="#bbf7d0";
+   btn.style.border="2px solid #16a34a";
+ } else {
+   btn.style.background="#fecaca";
+   btn.style.border="2px solid #dc2626";
+   const correctBtn=buttons.find(b=>b.textContent.trim().startsWith(q.answer+"."));
+   if(correctBtn){
+     correctBtn.style.background="#bbf7d0";
+     correctBtn.style.border="2px solid #16a34a";
+   }
+   mistakes.push(q);
+ }
+
+ const feedback=document.createElement('div');
+ feedback.style.marginTop='16px';
+ feedback.style.padding='14px';
+ feedback.style.borderRadius='10px';
+ feedback.style.background=a===q.answer ? '#ecfdf5' : '#fff7ed';
+ feedback.innerHTML=a===q.answer ? '<b>✓ Σωστό!</b>' : `<b>✗ Λάθος.</b><br>Η σωστή απάντηση είναι <b>${q.answer}</b>.`;
+ document.getElementById('app').appendChild(feedback);
+
+ const next=document.createElement('button');
+ next.textContent=index===quiz.length-1 ? 'Αποτελέσματα' : 'Επόμενη ερώτηση →';
+ next.onclick=()=>{
+   index++;
+   if(index<quiz.length) show(); else finish();
+ };
+ next.style.marginTop='12px';
+ document.getElementById('app').appendChild(next);
 }
 function finish(){
  let h=`<h2>Αποτελέσματα</h2><p id="result">Σωστά: ${score}/60<br>Λάθος: ${60-score}/60<br>Ποσοστό: ${(score/60*100).toFixed(1)}%</p>`;
  if(mistakes.length){
- h+="<h3>Ερωτήσεις για επανάληψη:</h3>";
- mistakes.forEach((m,n)=>h+=`<p>${n+1}. ${m.q}<br><b>Σωστή απάντηση: ${m.answer}</b></p>`);
+   h+="<h3>Ερωτήσεις για επανάληψη:</h3>";
+   mistakes.forEach((m,n)=>h+=`<p>${n+1}. ${m.q}<br><b>Σωστή απάντηση: ${m.answer}</b></p>`);
  }
  h+=`<button onclick="start()">Νέο τυχαίο τεστ</button>`;
  document.getElementById('app').innerHTML=h;
 }
-start();
 </script>
 </body></html>
-<script>
-if ('serviceWorker' in navigator) {
- navigator.serviceWorker.register('service-worker.js');
-}
-</script>
